@@ -1,587 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tier List Maker</title>
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tier List Fix</title>
     <style>
-        :root {
-            --bg-color: #121212;
-            --panel-bg: #1e1e1e;
-            --border-color: #333;
-            --text-color: #eee;
-            --accent: #4caf50;
-            --accent-hover: #45a049;
-            --pool-bg: #181818;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        header {
-            background-color: var(--panel-bg);
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .controls-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background-color: #333;
-            color: white;
-            border: 1px solid #555;
-            padding: 8px 12px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            transition: background 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn:hover { background-color: #444; }
-        .btn.primary { background-color: var(--accent); border-color: var(--accent); }
-        .btn.primary:hover { background-color: var(--accent-hover); }
-        
-        input[type="file"] { display: none; }
-
-        /* Tier List Board */
-        #tier-board {
-            flex-grow: 1;
-            padding: 15px;
-            overflow-x: auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        #tier-list {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            background-color: #000;
-            border: 2px solid #000;
-            min-width: 600px; /* Adjusted for better mobile fit while keeping structure */
-        }
-
-        .tier-row {
-            display: flex;
-            background-color: var(--panel-bg);
-            min-height: 90px;
-            position: relative;
-        }
-
-        .tier-row.dragging { opacity: 0.4; }
-
-        .tier-header {
-            width: 100px;
-            min-width: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: #000;
-            font-weight: bold;
-            font-size: 1.2rem;
-            position: relative;
-            border-right: 2px solid #000;
-        }
-
-        .tier-label {
-            width: 100%;
-            padding: 5px;
-            outline: none;
-            word-break: break-word;
-        }
-
-        .tier-settings {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            display: flex;
-            gap: 2px;
-            opacity: 0.3;
-            transition: opacity 0.2s;
-        }
-
-        .tier-header:hover .tier-settings, .tier-settings:active { opacity: 1; }
-
-        .tier-settings button {
-            background: rgba(0,0,0,0.6);
-            color: white;
-            border: none;
-            font-size: 12px;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 2px;
-        }
-
-        .color-picker {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .tier-dropzone {
-            flex-grow: 1;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            padding: 5px;
-            background-color: #1a1a1a;
-            align-content: flex-start;
-            min-height: 80px;
-        }
-
-        .tier-controls {
-            width: 40px;
-            display: flex;
-            flex-direction: column;
-            background-color: #000;
-            border-left: 2px solid #000;
-        }
-
-        .tier-controls button {
-            flex: 1;
-            background: #222;
-            color: #ccc;
-            border: none;
-            border-bottom: 1px solid #111;
-            cursor: pointer;
-            font-size: 14px;
-            touch-action: manipulation;
-        }
-        .tier-controls button:hover { background: #444; color: #fff; }
-        .tier-controls .drag-handle { cursor: grab; }
-
-        /* Images */
-        .item-img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            cursor: grab;
-            border: 2px solid transparent;
-            background-color: #333;
-            user-select: none;
-            -webkit-user-drag: element;
-            touch-action: none; /* Required for polyfill */
-        }
-        .item-img:active { cursor: grabbing; }
-
-        /* Image Pool */
-        #pool-container {
-            border-top: 2px solid var(--border-color);
-            background-color: var(--pool-bg);
-            padding: 15px;
-        }
-
-        #image-pool {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            min-height: 120px;
-            border: 2px dashed #555;
-            padding: 10px;
-            border-radius: 8px;
-            background-color: #111;
-        }
-
-        .pool-title { margin-top: 0; margin-bottom: 10px; font-size: 1rem; color: #bbb; }
-
-        /* Modals */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 10px;
-        }
-        .modal-overlay.active { display: flex; }
-
-        .modal {
-            background: var(--panel-bg);
-            padding: 20px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 600px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            max-height: 90vh;
-            box-sizing: border-box;
-        }
-
-        .modal h2 { margin-top: 0; font-size: 1.3rem; }
-        .modal-body { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
-
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #aaa; }
-        .form-group input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            background: #111;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        /* Search Results Grid */
-        #search-results {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-            gap: 8px;
-            margin-top: 15px;
-        }
-        .search-result-img {
-            width: 100%;
-            aspect-ratio: 1;
-            object-fit: cover;
-            cursor: pointer;
-            border: 2px solid transparent;
-            border-radius: 4px;
-        }
-        .search-result-img:hover { border-color: var(--accent); }
-
-        .pagination {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-        }
-
-        /* Context Menu */
-        #context-menu {
-            position: fixed;
-            background: #2a2a2a;
-            border: 1px solid #555;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-            padding: 5px 0;
-            display: none;
-            z-index: 2000;
-            border-radius: 4px;
-        }
-        .context-item {
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 0.95rem;
-        }
-        .context-item:hover { background: #3a3a3a; }
-
-        /* Toast */
-        #toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--accent);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 6px;
-            display: none;
-            z-index: 3000;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        }
-
-        .modal-close-btn {
-            align-self: flex-end;
-            background: #333;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-top: 15px;
-            padding: 8px 16px;
-            border-radius: 4px;
-        }
-        .modal-close-btn:hover { background: #444; }
+        body { background: #121212; color: white; font-family: sans-serif; padding: 20px; }
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        button { padding: 10px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
+        button:hover { background: #444; }
+        #tier-list { border: 2px solid #000; background: #000; display: flex; flex-direction: column; gap: 2px; }
+        .row { display: flex; min-height: 80px; background: #1e1e1e; }
+        .label { width: 100px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; text-align: center; padding: 5px; }
+        .zone { flex-grow: 1; padding: 5px; display: flex; flex-wrap: wrap; gap: 5px; background: #1a1a1a; min-width: 200px; }
+        .item { width: 70px; height: 70px; object-fit: cover; cursor: move; }
+        #pool { margin-top: 20px; border: 2px dashed #444; min-height: 100px; padding: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="header-top">
-            <div class="header-title">Tier List Maker</div>
-        </div>
-        <div class="controls-group">
-            <button class="btn" onclick="document.getElementById('file-upload').click()">📄 Add Images</button>
-            <button class="btn" onclick="document.getElementById('folder-upload').click()">📁 Add Folder</button>
-            <button class="btn" onclick="openSearchModal()">🔍 Web Search</button>
-            <input type="file" id="file-upload" multiple accept="image/*">
-            <input type="file" id="folder-upload" webkitdirectory>
-            
-            <span style="border-left: 1px solid #444; margin: 0 5px;"></span>
-            
-            <button class="btn" onclick="addTierRow()">➕ Add Tier</button>
-            <button class="btn" onclick="clearAll()" style="color: #ff7f7f; border-color: #ff7f7f;">🗑️ Clear</button>
-            
-            <span style="border-left: 1px solid #444; margin: 0 5px;"></span>
-            
-            <button class="btn primary" onclick="exportPNG()">📸 Export</button>
-            <button class="btn primary" onclick="shareList()">📤 Share</button>
-        </div>
-    </header>
-
-    <div id="tier-board">
-        <div id="tier-list">
-            </div>
+    <div class="controls">
+        <button id="addBtn">Dodaj Tier</button>
+        <button id="imgBtn">Dodaj Zdjęcia</button>
+        <button id="clearBtn">Wyczyść wszystko</button>
+        <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
     </div>
 
-    <div id="pool-container">
-        <h3 class="pool-title">Image Pool (Drag & Drop files here)</h3>
-        <div id="image-pool" class="dropzone"></div>
-    </div>
-
-    <div id="search-modal" class="modal-overlay">
-        <div class="modal">
-            <h2>Google Image Search</h2>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>API Key</label>
-                    <input type="text" id="api-key" placeholder="AIzaSy...">
-                </div>
-                <div class="form-group">
-                    <label>Search Engine ID (CX)</label>
-                    <input type="text" id="search-cx" placeholder="1234567890abcdef">
-                </div>
-                <div class="form-group" style="display: flex; gap: 8px;">
-                    <input type="text" id="search-query" placeholder="Search..." onkeypress="if(event.key==='Enter') doSearch(1)">
-                    <button class="btn primary" onclick="doSearch(1)">Search</button>
-                </div>
-                <div id="search-error" style="color: #ff7f7f; font-size: 0.9rem; margin-bottom: 10px;"></div>
-                <div id="search-results"></div>
-                <div class="pagination" style="display: none;" id="search-pagination">
-                    <button class="btn" onclick="doSearch(currentSearchPage - 1)" id="btn-prev-page">Prev</button>
-                    <span id="page-indicator" style="align-self: center;">Page 1</span>
-                    <button class="btn" onclick="doSearch(currentSearchPage + 1)" id="btn-next-page">Next</button>
-                </div>
-            </div>
-            <button class="modal-close-btn" onclick="closeSearchModal()">Close</button>
-        </div>
-    </div>
-
-    <div id="context-menu">
-        <div class="context-item" onclick="sendToPool()">Send back to pool</div>
-        <div class="context-item" style="color: #ff7f7f;" onclick="deleteImage()">Delete image</div>
-    </div>
-
-    <div id="toast">Link copied to clipboard!</div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
+    <div id="tier-list"></div>
     
+    <div id="pool"></div>
+
     <script>
-        // Init mobile drag and drop polyfill
-        MobileDragDrop.polyfill({
-            dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
-        });
-        // Prevent scrolling while dragging on mobile
-        window.addEventListener('touchmove', function() {}, {passive: false});
+        // Funkcje przypisujemy po załadowaniu DOM, żeby uniknąć błędów "null"
+        document.addEventListener('DOMContentLoaded', () => {
+            const list = document.getElementById('tier-list');
+            const pool = document.getElementById('pool');
+            const fileInput = document.getElementById('fileInput');
 
-        const defaultTiers = [
-            { label: 'S', color: '#ff7f7f' },
-            { label: 'A', color: '#ffbf7f' },
-            { label: 'B', color: '#ffff7f' },
-            { label: 'C', color: '#7fff7f' },
-            { label: 'D', color: '#7fbfff' },
-            { label: 'F', color: '#bf7fff' }
-        ];
+            // 1. Dodawanie wiersza
+            document.getElementById('addBtn').onclick = () => {
+                const row = document.createElement('div');
+                row.className = 'row';
+                row.innerHTML = `
+                    <div class="label" contenteditable="true" style="background:#ff7f7f">Nowy</div>
+                    <div class="zone"></div>
+                `;
+                // Obsługa dropu na nowym wierszu
+                const zone = row.querySelector('.zone');
+                zone.ondragover = (e) => e.preventDefault();
+                zone.ondrop = (e) => {
+                    e.preventDefault();
+                    const id = e.dataTransfer.getData('text');
+                    const el = document.getElementById(id);
+                    if(el) zone.appendChild(el);
+                };
+                list.appendChild(row);
+            };
 
-        let draggedItem = null;
-        let draggedRow = null;
-        let targetContextImg = null;
-        let imgCounter = 0;
-
-        let currentSearchPage = 1;
-        let currentSearchQuery = "";
-
-        function init() {
-            setupDragAndDropWindow();
-            setupFileInputs();
+            // 2. Obsługa zdjęć
+            document.getElementById('imgBtn').onclick = () => fileInput.click();
             
-            if (window.location.hash && window.location.hash.startsWith('#data=')) {
-                loadFromHash();
-            } else {
-                renderDefaultTiers();
-            }
-            
-            document.addEventListener('click', (e) => {
-                if (e.button !== 2) document.getElementById('context-menu').style.display = 'none';
-            });
-        }
+            fileInput.onchange = (e) => {
+                Array.from(e.target.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = document.createElement('img');
+                        img.src = event.target.result;
+                        img.className = 'item';
+                        img.id = 'img_' + Math.random().toString(36).substr(2, 9);
+                        img.draggable = true;
+                        img.ondragstart = (ev) => ev.dataTransfer.setData('text', img.id);
+                        pool.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
 
-        function renderDefaultTiers() {
-            const container = document.getElementById('tier-list');
-            container.innerHTML = '';
-            defaultTiers.forEach(t => {
-                container.appendChild(createTierRow(t.label, t.color));
-            });
-            setupDropZones();
-        }
+            // 3. Czyszczenie
+            document.getElementById('clearBtn').onclick = () => {
+                if(confirm("Czy na pewno?")) location.reload();
+            };
 
-        function createTierRow(label, color) {
-            const rowId = 'tier_' + Math.random().toString(36).substr(2, 9);
-            const row = document.createElement('div');
-            row.className = 'tier-row';
-            row.id = rowId;
-            
-            row.innerHTML = `
-                <div class="tier-header" style="background-color: ${color};">
-                    <div class="tier-label" contenteditable="true" spellcheck="false">${label}</div>
-                    <div class="tier-settings">
-                        <button onclick="triggerColorPicker('${rowId}')">🎨</button>
-                        <input type="color" class="color-picker" value="${color}" onchange="updateTierColor('${rowId}', this.value)">
-                    </div>
-                </div>
-                <div class="tier-dropzone dropzone"></div>
-                <div class="tier-controls">
-                    <button class="drag-handle" draggable="true" title="Drag to reorder">↕</button>
-                    <button onclick="moveRowUp('${rowId}')" title="Move Up">▲</button>
-                    <button onclick="moveRowDown('${rowId}')" title="Move Down">▼</button>
-                    <button onclick="deleteRow('${rowId}')" title="Delete Row" style="color: #ff7f7f;">✖</button>
-                </div>
-            `;
-
-            const dragHandle = row.querySelector('.drag-handle');
-            dragHandle.addEventListener('dragstart', (e) => {
-                draggedRow = row;
-                e.dataTransfer.effectAllowed = 'move';
-                setTimeout(() => row.classList.add('dragging'), 0);
-            });
-            dragHandle.addEventListener('dragend', () => {
-                draggedRow = null;
-                row.classList.remove('dragging');
-            });
-
-            row.addEventListener('dragover', (e) => {
-                if(!draggedRow || draggedRow === row) return;
+            // Domyślne strefy dla poola
+            pool.ondragover = (e) => e.preventDefault();
+            pool.ondrop = (e) => {
                 e.preventDefault();
-                const bounding = row.getBoundingClientRect();
-                const offset = bounding.y + (bounding.height / 2);
-                if(e.clientY - offset > 0) {
-                    row.parentNode.insertBefore(draggedRow, row.nextSibling);
-                } else {
-                    row.parentNode.insertBefore(draggedRow, row);
-                }
-            });
+                const id = e.dataTransfer.getData('text');
+                const el = document.getElementById(id);
+                if(el) pool.appendChild(el);
+            };
 
-            return row;
-        }
-
-        function addTierRow() {
-            const container = document.getElementById('tier-list');
-            container.appendChild(createTierRow('New', '#aaaaaa'));
-            setupDropZones();
-        }
-
-        function deleteRow(rowId) {
-            const row = document.getElementById(rowId);
-            const images = row.querySelectorAll('.item-img');
-            const pool = document.getElementById('image-pool');
-            images.forEach(img => pool.appendChild(img));
-            row.remove();
-        }
-
-        function moveRowUp(rowId) {
-            const row = document.getElementById(rowId);
-            if (row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
-        }
-
-        function moveRowDown(rowId) {
-            const row = document.getElementById(rowId);
-            if (row.nextElementSibling) row.parentNode.insertBefore(row, row.nextElementSibling.nextElementSibling);
-        }
-
-        function triggerColorPicker(rowId) { document.getElementById(rowId).querySelector('.color-picker').click(); }
-        function updateTierColor(rowId, color) { document.getElementById(rowId).querySelector('.tier-header').style.backgroundColor = color; }
-
-        function clearAll() {
-            if(confirm("Reset tier list and remove all images?")) {
-                document.getElementById('image-pool').innerHTML = '';
-                renderDefaultTiers();
-                history.replaceState(null, null, ' ');
-            }
-        }
-
-        function setupDropZones() {
-            const dropzones = document.querySelectorAll('.dropzone');
-            dropzones.forEach(zone => {
-                zone.removeEventListener('dragover', handleDragOver);
-                zone.removeEventListener('drop', handleDrop);
-                zone.addEventListener('dragover', handleDragOver);
-                zone.addEventListener('drop', handleDrop);
-            });
-        }
-
-        function handleDragOver(e) {
-            if(draggedRow) return;
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        }
-
-        function handleDrop(e) {
-            if(draggedRow) return;
-            e.preventDefault();
-            const id = e.dataTransfer.getData('text/plain');
-            const img = document.getElementById(id);
-            if(img && img.classList.contains('item-img')) {
-                e.currentTarget.appendChild(img);
-            }
-        }
-
-        function createImageElement(src) {
-            const img = document.createElement('img');
-            img.src = src;
-            img.className = 'item-img';
-            img.id = 'img_' + (imgCounter++);
-            img.draggable = true;
-            
-            img.addEventListener('dragstart', (e) => {
-                draggedItem = img;
-                e.dataTransfer.setData('text/plain', img.id);
-                setTimeout(() => img.style.opacity = '0.5', 0);
-            });
-            img.addEventListener('dragend', () => {
-                draggedItem = null;
-                img.style.opacity = '1';
-            });
-            
-            img.addEventListener('contextmenu', showContextMenu);
-            return img;
-        }
-
-        function showContextMenu(e) {
-            e.preventDefault(
+            // Dodaj startowe tiery
+            document.getElementById('addBtn').click();
+            document.getElementById('addBtn').click();
+        });
+    </script>
+</body>
+</html>
