@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tier List Maker</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
+
     <style>
         :root {
             --bg-color: #121212;
@@ -28,18 +31,28 @@
 
         header {
             background-color: var(--panel-bg);
-            padding: 15px 20px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap;
-            gap: 10px;
         }
 
         .header-title {
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             font-weight: bold;
+        }
+
+        .controls-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -53,50 +66,45 @@
             transition: background 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
         }
 
         .btn:hover { background-color: #444; }
         .btn.primary { background-color: var(--accent); border-color: var(--accent); }
         .btn.primary:hover { background-color: var(--accent-hover); }
         
-        .controls-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
         input[type="file"] { display: none; }
 
         /* Tier List Board */
         #tier-board {
             flex-grow: 1;
-            padding: 20px;
+            padding: 15px;
             overflow-x: auto;
-            min-width: 800px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         #tier-list {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 4px;
             background-color: #000;
             border: 2px solid #000;
+            min-width: 600px; /* Adjusted for better mobile fit while keeping structure */
         }
 
         .tier-row {
             display: flex;
             background-color: var(--panel-bg);
-            min-height: 100px;
+            min-height: 90px;
             position: relative;
         }
 
-        .tier-row.dragging { opacity: 0.5; }
+        .tier-row.dragging { opacity: 0.4; }
 
         .tier-header {
-            width: 120px;
-            min-width: 120px;
+            width: 100px;
+            min-width: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -110,7 +118,7 @@
 
         .tier-label {
             width: 100%;
-            padding: 10px;
+            padding: 5px;
             outline: none;
             word-break: break-word;
         }
@@ -121,19 +129,19 @@
             right: 2px;
             display: flex;
             gap: 2px;
-            opacity: 0;
+            opacity: 0.3;
             transition: opacity 0.2s;
         }
 
-        .tier-header:hover .tier-settings { opacity: 1; }
+        .tier-header:hover .tier-settings, .tier-settings:active { opacity: 1; }
 
         .tier-settings button {
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             color: white;
             border: none;
-            font-size: 10px;
+            font-size: 12px;
             cursor: pointer;
-            padding: 2px 4px;
+            padding: 4px;
             border-radius: 2px;
         }
 
@@ -152,6 +160,7 @@
             padding: 5px;
             background-color: #1a1a1a;
             align-content: flex-start;
+            min-height: 80px;
         }
 
         .tier-controls {
@@ -165,16 +174,15 @@
         .tier-controls button {
             flex: 1;
             background: #222;
-            color: #aaa;
+            color: #ccc;
             border: none;
             border-bottom: 1px solid #111;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            touch-action: manipulation;
         }
-        .tier-controls button:hover { background: #333; color: #fff; }
-        .tier-controls .drag-handle {
-            cursor: grab;
-        }
+        .tier-controls button:hover { background: #444; color: #fff; }
+        .tier-controls .drag-handle { cursor: grab; }
 
         /* Images */
         .item-img {
@@ -184,6 +192,9 @@
             cursor: grab;
             border: 2px solid transparent;
             background-color: #333;
+            user-select: none;
+            -webkit-user-drag: element;
+            touch-action: none; /* Required for polyfill */
         }
         .item-img:active { cursor: grabbing; }
 
@@ -191,31 +202,32 @@
         #pool-container {
             border-top: 2px solid var(--border-color);
             background-color: var(--pool-bg);
-            padding: 20px;
-            min-height: 200px;
+            padding: 15px;
         }
 
         #image-pool {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            min-height: 150px;
-            border: 2px dashed #444;
+            min-height: 120px;
+            border: 2px dashed #555;
             padding: 10px;
             border-radius: 8px;
+            background-color: #111;
         }
 
-        .pool-title { margin-top: 0; margin-bottom: 10px; font-size: 1rem; color: #aaa; }
+        .pool-title { margin-top: 0; margin-bottom: 10px; font-size: 1rem; color: #bbb; }
 
         /* Modals */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            padding: 10px;
         }
         .modal-overlay.active { display: flex; }
 
@@ -223,16 +235,17 @@
             background: var(--panel-bg);
             padding: 20px;
             border-radius: 8px;
-            width: 90%;
+            width: 100%;
             max-width: 600px;
             border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             max-height: 90vh;
+            box-sizing: border-box;
         }
 
-        .modal h2 { margin-top: 0; }
-        .modal-body { overflow-y: auto; flex-grow: 1; }
+        .modal h2 { margin-top: 0; font-size: 1.3rem; }
+        .modal-body { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
 
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #aaa; }
@@ -249,8 +262,8 @@
         /* Search Results Grid */
         #search-results {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 8px;
             margin-top: 15px;
         }
         .search-result-img {
@@ -259,7 +272,7 @@
             object-fit: cover;
             cursor: pointer;
             border: 2px solid transparent;
-            transition: border 0.2s;
+            border-radius: 4px;
         }
         .search-result-img:hover { border-color: var(--accent); }
 
@@ -273,17 +286,17 @@
         #context-menu {
             position: fixed;
             background: #2a2a2a;
-            border: 1px solid #444;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            border: 1px solid #555;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
             padding: 5px 0;
             display: none;
             z-index: 2000;
             border-radius: 4px;
         }
         .context-item {
-            padding: 8px 20px;
+            padding: 10px 20px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
         .context-item:hover { background: #3a3a3a; }
 
@@ -295,40 +308,50 @@
             transform: translateX(-50%);
             background: var(--accent);
             color: white;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 12px 24px;
+            border-radius: 6px;
             display: none;
             z-index: 3000;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
         .modal-close-btn {
             align-self: flex-end;
-            background: transparent;
-            color: #aaa;
+            background: #333;
+            color: #fff;
             border: none;
             cursor: pointer;
-            font-size: 1.2rem;
-            margin-top: 10px;
+            font-size: 1rem;
+            margin-top: 15px;
+            padding: 8px 16px;
+            border-radius: 4px;
         }
+        .modal-close-btn:hover { background: #444; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="header-title">Tier List Maker</div>
+        <div class="header-top">
+            <div class="header-title">Tier List Maker</div>
+        </div>
         <div class="controls-group">
             <button class="btn" onclick="document.getElementById('file-upload').click()">📄 Add Images</button>
             <button class="btn" onclick="document.getElementById('folder-upload').click()">📁 Add Folder</button>
             <button class="btn" onclick="openSearchModal()">🔍 Web Search</button>
-            
             <input type="file" id="file-upload" multiple accept="image/*">
             <input type="file" id="folder-upload" webkitdirectory>
             
-            <div style="width: 20px;"></div> <button class="btn" onclick="addTierRow()">➕ Add Tier</button>
-            <button class="btn" onclick="clearAll()">🗑️ Clear All</button>
+            <span style="border-left: 1px solid #444; margin: 0 5px;"></span>
             
-            <div style="width: 20px;"></div> <button class="btn primary" onclick="exportPNG()">📸 Export PNG</button>
-            <button class="btn primary" onclick="shareList()">📤 Share Link</button>
+            <button class="btn" onclick="addTierRow()">➕ Add Tier</button>
+            <button class="btn" onclick="clearAll()" style="color: #ff7f7f; border-color: #ff7f7f;">🗑️ Clear</button>
+            
+            <span style="border-left: 1px solid #444; margin: 0 5px;"></span>
+            
+            <button class="btn primary" onclick="exportPNG()">📸 Export</button>
+            <button class="btn primary" onclick="shareList()">📤 Share</button>
         </div>
     </header>
 
@@ -338,7 +361,7 @@
     </div>
 
     <div id="pool-container">
-        <h3 class="pool-title">Image Pool (Drag & Drop files here or anywhere)</h3>
+        <h3 class="pool-title">Image Pool (Drag & Drop files here)</h3>
         <div id="image-pool" class="dropzone"></div>
     </div>
 
@@ -347,15 +370,15 @@
             <h2>Google Image Search</h2>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>API Key (Saved in memory only)</label>
+                    <label>API Key</label>
                     <input type="text" id="api-key" placeholder="AIzaSy...">
                 </div>
                 <div class="form-group">
                     <label>Search Engine ID (CX)</label>
                     <input type="text" id="search-cx" placeholder="1234567890abcdef">
                 </div>
-                <div class="form-group" style="display: flex; gap: 10px;">
-                    <input type="text" id="search-query" placeholder="Search for characters, items..." onkeypress="if(event.key==='Enter') doSearch(1)">
+                <div class="form-group" style="display: flex; gap: 8px;">
+                    <input type="text" id="search-query" placeholder="Search..." onkeypress="if(event.key==='Enter') doSearch(1)">
                     <button class="btn primary" onclick="doSearch(1)">Search</button>
                 </div>
                 <div id="search-error" style="color: #ff7f7f; font-size: 0.9rem; margin-bottom: 10px;"></div>
@@ -372,13 +395,22 @@
 
     <div id="context-menu">
         <div class="context-item" onclick="sendToPool()">Send back to pool</div>
-        <div class="context-item" onclick="deleteImage()">Delete image</div>
+        <div class="context-item" style="color: #ff7f7f;" onclick="deleteImage()">Delete image</div>
     </div>
 
     <div id="toast">Link copied to clipboard!</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
+    
     <script>
+        // Init mobile drag and drop polyfill
+        MobileDragDrop.polyfill({
+            dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
+        });
+        // Prevent scrolling while dragging on mobile
+        window.addEventListener('touchmove', function() {}, {passive: false});
+
         const defaultTiers = [
             { label: 'S', color: '#ff7f7f' },
             { label: 'A', color: '#ffbf7f' },
@@ -393,29 +425,23 @@
         let targetContextImg = null;
         let imgCounter = 0;
 
-        // Search State
         let currentSearchPage = 1;
         let currentSearchQuery = "";
 
-        // Initialization
         function init() {
             setupDragAndDropWindow();
             setupFileInputs();
             
-            // Check hash for share data
             if (window.location.hash && window.location.hash.startsWith('#data=')) {
                 loadFromHash();
             } else {
                 renderDefaultTiers();
             }
             
-            // Global click to close context menu
-            document.addEventListener('click', () => {
-                document.getElementById('context-menu').style.display = 'none';
+            document.addEventListener('click', (e) => {
+                if (e.button !== 2) document.getElementById('context-menu').style.display = 'none';
             });
         }
-
-        // --- Core Tier Rendering ---
 
         function renderDefaultTiers() {
             const container = document.getElementById('tier-list');
@@ -445,11 +471,10 @@
                     <button class="drag-handle" draggable="true" title="Drag to reorder">↕</button>
                     <button onclick="moveRowUp('${rowId}')" title="Move Up">▲</button>
                     <button onclick="moveRowDown('${rowId}')" title="Move Down">▼</button>
-                    <button onclick="deleteRow('${rowId}')" title="Delete Row">✖</button>
+                    <button onclick="deleteRow('${rowId}')" title="Delete Row" style="color: #ff7f7f;">✖</button>
                 </div>
             `;
 
-            // Row Dragging Logic
             const dragHandle = row.querySelector('.drag-handle');
             dragHandle.addEventListener('dragstart', (e) => {
                 draggedRow = row;
@@ -478,8 +503,7 @@
 
         function addTierRow() {
             const container = document.getElementById('tier-list');
-            const row = createTierRow('New', '#aaaaaa');
-            container.appendChild(row);
+            container.appendChild(createTierRow('New', '#aaaaaa'));
             setupDropZones();
         }
 
@@ -493,51 +517,37 @@
 
         function moveRowUp(rowId) {
             const row = document.getElementById(rowId);
-            if (row.previousElementSibling) {
-                row.parentNode.insertBefore(row, row.previousElementSibling);
-            }
+            if (row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
         }
 
         function moveRowDown(rowId) {
             const row = document.getElementById(rowId);
-            if (row.nextElementSibling) {
-                row.parentNode.insertBefore(row, row.nextElementSibling.nextElementSibling);
-            }
+            if (row.nextElementSibling) row.parentNode.insertBefore(row, row.nextElementSibling.nextElementSibling);
         }
 
-        function triggerColorPicker(rowId) {
-            const row = document.getElementById(rowId);
-            row.querySelector('.color-picker').click();
-        }
-
-        function updateTierColor(rowId, color) {
-            const row = document.getElementById(rowId);
-            row.querySelector('.tier-header').style.backgroundColor = color;
-        }
+        function triggerColorPicker(rowId) { document.getElementById(rowId).querySelector('.color-picker').click(); }
+        function updateTierColor(rowId, color) { document.getElementById(rowId).querySelector('.tier-header').style.backgroundColor = color; }
 
         function clearAll() {
             if(confirm("Reset tier list and remove all images?")) {
                 document.getElementById('image-pool').innerHTML = '';
                 renderDefaultTiers();
-                history.replaceState(null, null, ' '); // remove hash
+                history.replaceState(null, null, ' ');
             }
         }
-
-        // --- Drag and Drop Logic (Images) ---
 
         function setupDropZones() {
             const dropzones = document.querySelectorAll('.dropzone');
             dropzones.forEach(zone => {
                 zone.removeEventListener('dragover', handleDragOver);
                 zone.removeEventListener('drop', handleDrop);
-                
                 zone.addEventListener('dragover', handleDragOver);
                 zone.addEventListener('drop', handleDrop);
             });
         }
 
         function handleDragOver(e) {
-            if(draggedRow) return; // Ignore if dragging a row
+            if(draggedRow) return;
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
         }
@@ -548,9 +558,7 @@
             const id = e.dataTransfer.getData('text/plain');
             const img = document.getElementById(id);
             if(img && img.classList.contains('item-img')) {
-                // Determine insertion point
-                const zone = e.currentTarget;
-                zone.appendChild(img);
+                e.currentTarget.appendChild(img);
             }
         }
 
@@ -570,36 +578,10 @@
                 draggedItem = null;
                 img.style.opacity = '1';
             });
+            
             img.addEventListener('contextmenu', showContextMenu);
             return img;
         }
 
-        // --- Context Menu ---
-        
         function showContextMenu(e) {
-            e.preventDefault();
-            targetContextImg = e.target;
-            const menu = document.getElementById('context-menu');
-            menu.style.display = 'block';
-            menu.style.left = e.pageX + 'px';
-            menu.style.top = e.pageY + 'px';
-        }
-
-        function sendToPool() {
-            if(targetContextImg) {
-                document.getElementById('image-pool').appendChild(targetContextImg);
-                targetContextImg = null;
-            }
-        }
-
-        function deleteImage() {
-             if(targetContextImg) {
-                targetContextImg.remove();
-                targetContextImg = null;
-            }
-        }
-
-        // --- File Uploads ---
-
-        function setupFileInputs() {
-            document.getElementById('file-upload').addEventListener('change', handleFiles
+            e.preventDefault(
