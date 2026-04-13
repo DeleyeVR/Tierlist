@@ -1,2 +1,2 @@
 # Tierlist
-Tier lis by deleyeVR
+Tier list by deleyeVR
